@@ -1,0 +1,14 @@
+# config for initial cd booting
+# very cautious settings to get started.
+# will defeat booting from usb devices.
+*nodumpstack=1
+partition=new
+mouseport=ask
+monitor=ask
+vgasize=ask
+adisk=/dev/sdD0/data
+cdboot=yes
+# console=0
+# baud=9600
+bootargs=local!#S/sdD0/data
+bootfile=/386/9pccd
