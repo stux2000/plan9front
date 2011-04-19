@@ -1,0 +1,159 @@
+# TODO
+# settime
+# handle rootspec
+# handle rootdir
+# clean rc environment before running init(8)
+# kfs
+# caching
+
+rfork e
+# boot methods
+mlocal = (configlocal connectlocal)
+mtcp = (configtcp connecttcp)
+mtab = (mlocal mtcp)
+config=1
+connect=2
+
+. /rc/lib/local.rc
+. /rc/lib/tcp.rc
+
+fn fatal {
+	echo $*
+	exit $"*
+}
+
+fn must {
+	$* || fatal $"*^': '^$status
+}
+
+fn ask {
+	echo -n $1
+	echo -n $2
+	if(! ~ $#3 0){
+		echo -n ' ['
+		echo -n $3
+		echo -n '] '
+	}
+	$1=`{read}
+	if(~ $#$1 0)
+		$1=$3
+	if(~ $"$1 '!rc'){
+		rc -i
+		$1=()
+	}
+	if(~ $#$1 0)
+		ask $*
+}
+
+fn readmethod{
+	found=0
+	while(~ $found 0){
+		if(~ $#nobootprompt 0){
+			echo
+			showlocaldevs
+			ask bootargs ' are? (tcp, local!device)' $"bootargs
+		}
+		if not {
+			bootargs=$nobootprompt
+			nobootprompt=()
+		}
+		method=`{echo $bootargs | awk -F! '{print $1}'}
+		NF=`{echo $bootargs | awk -F! '{print NF}'}
+		for(i in `{seq 1 $#mtab}){
+			if(~ $mtab($i) m^$method)
+				found=$i 
+		}
+		if(~ $found 0)
+			echo method $method not found
+	}
+	methodarg = `{echo $bootargs | awk -F! '{print $2}'}
+	mp = $$mtab($found)
+}
+
+fn main{
+	rm -f /srv/boot
+
+	readmethod
+	$mp($config) $methodarg
+
+	switch($method){
+	case local
+		islocal=1
+	case hybrid
+		ishybrid=1
+	}
+
+	# authentication agent
+	if(! test -f /srv/factotum){
+		x=(/boot/factotum -sfactotum)
+		if(~ $cpuflag 1)
+			x=($x -kS)
+		if not
+			x=($x -u)
+		if(! ~ $#authaddr 0)
+			x=($x -a $authaddr)
+		if(! ~ $#debugfactotum 0)
+			x=($x -p)
+		must $x
+	}
+
+	# connect to the root file system
+	$mp($connect) $methodarg
+
+	# mount root filesystem
+	must mount -c /srv/boot /root
+
+	# start pager
+	if(test -x /dev/swap)
+		echo -n start >/dev/swap
+
+	# remove part of our temporary root
+	/mnt/broot/$cputype/bin/unmount /$cputype/bin /bin
+	/mnt/broot/$cputype/bin/unmount /rc/bin /bin
+	/mnt/broot/$cputype/bin/unmount /
+
+	# create the name space, mount the root fs
+	/mnt/broot/$cputype/bin/bind / /
+	/mnt/broot/$cputype/bin/mount -ac '#s/boot' /
+
+	# remove the remaining temporary root
+	/mnt/broot/$cputype/bin/unmount /mnt/broot
+
+	rootdir=/root
+
+	if(~ $#init 0){
+		init=/$cputype/init
+		if(~ $cpuflag 1)
+			init=($init -c)
+		if not
+			init=($init -t)
+		# TODO handle mflag
+	}
+	exec $init
+}
+
+bind -q '#p' /proc
+
+bind -qa '#S' /dev
+bind -qa '#f' /dev
+bind -qa '#k' /dev
+bind -qa '#æ' /dev
+
+if(test -e '#u'){
+	bind -a '#u' /dev
+	usb/usbd
+	sleep 1
+}
+
+if(! ~ $#kbmap 0){
+	bind -a '#κ' /dev
+	if(test -r $"kbmap)
+		cat $"kbmap >/dev/kbmap
+}
+
+configlocal	# add partitions and binds
+
+while()@{
+	rfork n
+	main
+}
