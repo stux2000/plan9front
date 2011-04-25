@@ -1,0 +1,81 @@
+#!/bin/rc
+
+# desc: create a boot floppy or configure hard disk to boot plan 9
+# prereq: copydist
+
+switch($1) {
+case go
+	echo
+	echo 'Initializing Plan 9 FAT configuration partition (9fat)'
+	echo
+	
+	fat=(/dev/sd*/9fat)
+	fat=$fat(1)
+	disk=`{echo $fat | sed 's:/dev/::;s:/9fat::'}
+	if(! test -f $fat) {
+		echo 'You have no 9fat partition.  Can''t setup booting.'
+		exit
+	}
+
+	if(! test -f /tmp/plan9.ini) {
+		{
+			echo bootfile'='9pcf
+			echo 'bootargs=local!'^$fs
+			echo 'mouseport='^$mouseport
+			echo 'monitor='^$monitor
+			echo 'vgasize='^$vgasize
+		} >/tmp/plan9.ini
+	}
+	if(! test -f /tmp/plan9ini.bak)
+		cp /tmp/plan9.ini /tmp/plan9ini.bak
+
+	need9fatformat=no
+	if(! isfat $fat)
+		need9fatformat=yes
+	if(! test -f /srv/dos)
+		dossrv
+	if not if(! mount -c /srv/dos /n/9fat /dev/$disk/9fat >[2]/dev/null)
+		need9fatformat=yes
+	if not if(! test -f /n/9fat/plan9.ini)
+		need9fatformat=yes
+
+	if(~ $need9fatformat yes){
+		log Initializing Plan 9 FAT partition.
+		disk/format -r 2 -d -b /386/pbs $fat /n/newfs/386/9bootfat
+		mount -c /srv/dos /n/9fat $fat
+	}
+
+	logprog cp /tmp/plan9.ini /n/9fat/plan9.ini
+	if(test -f /tmp/plan9ini.bak)
+		logprog cp /tmp/plan9ini.bak /n/9fat/plan9ini.bak
+	logprog cp /n/newfs/386/9bootfat /n/9fat/9bootfat
+	logprog cp /n/newfs/386/9pcf /n/9fat/9pcf
+
+	echo
+	echo 'There are myriad ways to boot a Plan 9 system.'
+	echo 'You can use any of the following.'
+	echo
+	echo '  plan9  - make the plan 9 disk partition the default for booting'
+	echo '  winnt  - add a plan 9 option to windows nt/2000/xp boot manager'
+	echo
+	echo 'If you are upgrading an extant third edition installation and booting'
+	echo 'from something other than a floppy, you needn''t run anything here.'
+	echo 'Just type ctl-d.'
+
+	oldbootsetup=$didbootsetup
+	didbootsetup=1
+	export didbootsetup
+	prompt 'Enable boot method' plan9 winnt
+	
+	if(! boot$rd){
+		didbootsetup=$oldbootsetup
+		export didbootsetup
+	}
+
+case checkdone
+	xxxfat=(/dev/sd*/9fat)
+	if(! isfat $xxxfat(1) || ! ~ $didbootsetup 1){
+		bootsetup=ready
+		export bootsetup
+	}
+}
