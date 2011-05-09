@@ -1,0 +1,166 @@
+#!/bin/rc
+
+bind -q '#p' /proc
+
+if(test -e '#b' && ! test -e /dev/kbd){
+	bind -a '#b' /dev
+	aux/kbdfs -s cons
+	exec /rc/bin/bootrc </dev/cons >/dev/cons >[2]/dev/cons
+}
+
+bind -qa '#S' /dev
+bind -qa '#f' /dev
+bind -qa '#k' /dev
+bind -qa '#æ' /dev
+
+fn set {
+	a=$$1
+	$1=()
+	rm -f '#e'/$1 '#ec'/$1 /env/$1
+	if(! ~ $#a 0)
+		$1=$a
+}
+
+# convert plan9.ini variables
+set init
+set user
+set nvram
+set rootdir
+set bootargs
+set nobootprompt
+set sysname
+set debugfactotum
+set fs
+set fsaddr
+set auth
+set authaddr
+
+fn fatal {
+	echo $*
+	exit $"*
+}
+
+fn must {
+	$* || fatal $"*^': '^$status
+}
+
+fn ask {
+	echo -n $1
+	echo -n $2
+	if(! ~ $#3 0){
+		echo -n ' ['
+		echo -n $3
+		echo -n '] '
+	}
+	$1=`{read}
+	if(~ $#$1 0)
+		$1=$3
+	if(~ $"$1 '!rc'){
+		rc -i
+		$1=()
+	}
+	if(~ $#$1 0)
+		ask $*
+}
+
+mt=()
+. /rc/lib/tcp.rc
+. /rc/lib/local.rc
+
+fn main{
+	mp=()
+	while(~ $#mp 0){
+		if(~ $#nobootprompt 0){
+			echo
+			showlocaldevs
+			ask bootargs ' is (tcp, local!device)' $bootargs
+		}
+		if not bootargs=$nobootprompt
+		mn=`{echo $bootargs | awk -F! '{print $1}'}
+		ma=`{echo $bootargs | sed 's/[^!]+!?//'}
+		for(i in `{seq 1 $#mt}){
+			if(~ $mt($i) m^$mn)
+				mp=$$mt($i)
+		}
+	}
+
+	# config method
+	$mp(1) $ma
+
+	# authentication agent
+	if(! test -f /srv/factotum){
+		x=(/boot/factotum -sfactotum)
+		if(~ $cpuflag 1)
+			x=($x -S)
+		if not
+			x=($x -u)
+		if(! ~ $#authaddr 0)
+			x=($x -a $authaddr)
+		if(! ~ $#debugfactotum 0)
+			x=($x -p)
+		must $x
+	}
+	if not user=`{cat /dev/hostowner}
+
+	# connect method
+	$mp(2) $ma
+
+	# mount and change root in new enviroment and namespace
+	rfork ne
+
+	# mount root filesystem
+	if(~ $#rootdir 0)
+		rootdir=/root
+	must mount -c /srv/boot $rootdir
+
+	# remove enviroment variables
+	rm -f /env/^$mt /env/? /env/?? '/env/fn#'* 
+
+	# remove part of our temporary root
+	/mnt/broot/$cputype/bin/unmount /$cputype/bin /bin
+	/mnt/broot/$cputype/bin/unmount /rc/bin /bin
+	/mnt/broot/$cputype/bin/unmount /
+
+	# create the name space, mount the root fs
+	/mnt/broot/$cputype/bin/bind / /
+	/mnt/broot/$cputype/bin/mount -ac '#s/boot' /
+
+	# remove the remaining temporary root
+	/mnt/broot/$cputype/bin/unmount /mnt/broot
+
+	if(~ $#init 0){
+		init=/$cputype/init
+		if(~ $cpuflag 1)
+			init=($init -c)
+		if not
+			init=($init -t)
+	}
+	exec $init
+}
+
+if(test -e '#u'){
+	bind -a '#u' /dev
+	usb/usbd
+}
+
+if(! ~ $#kbmap 0){
+	bind -a '#κ' /dev
+	if(test -r $"kbmap)
+		cat $"kbmap >/dev/kbmap
+}
+
+# bind in an ip interface
+for(i in I l`{seq 0 3})
+	bind -qa '#'$i /net
+
+configlocal	# add partitions and binds
+
+while(){
+	@{main}
+	sleep 1
+
+	# cleanup so it can be restarted
+	nobootprompt=()
+	user=()
+	rm -f /srv/boot /srv/slashn /srv/cs /srv/dns
+}
