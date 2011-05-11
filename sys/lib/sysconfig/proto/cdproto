@@ -1,0 +1,139 @@
+uid=sys
+gid=sys
+adm	d775 adm adm
+	uid=adm
+	gid=adm
+	keys.who 665
+	timezone	d775
+		*
+cfg	d775
+	+
+cron	d777 sys sys
+	bootes	664 bootes bootes
+fd	d775
+lib	d775
+	+
+rc	d775
+	+
+mail	d775 upas upas
+	uid=upas
+	gid=upas
+	box	d775
+		bootes	d775 bootes bootes
+			mbox	a662 bootes bootes
+		glenda	d775 glenda glenda
+			mbox	a662 glenda glenda
+	faxoutqueue	d777
+	faxqueue	d777
+	fs	d555
+	grey	d775
+	lib	d775
+		*
+	queue	d777
+	tmp	d777
+
+386	d775
+	+
+68000	d775
+	+
+68020	d775
+	+
+alpha	d775
+	+
+amd64	d775
+	+
+arm	d775
+	+
+power	d775
+	+
+power64	d775
+	+
+sparc	d775
+	+
+sparc64	d775
+	+
+mips	d775
+	+
+
+acme	d775
+	+
+mnt	d775
+	acme	d555
+	apeselect	d555
+	apm	d555
+	cd	d555
+	cons	d555
+		cons	d555
+		consctl	d555
+	consoles	d555
+	doc	d555
+	exportfs	d555
+		*
+	keys	d555
+	lp	d555
+	netkeys	d555
+	news	d555
+	plumb	d555
+	rdb	d555
+	temp	d555
+	term	d555
+	ums	d555
+	vmware	d555
+	web	d555
+	webcookies	d555
+	wiki	d555
+	wrap	d555
+	wsys	d555
+n	d775
+sys	d775
+	games	d775
+		+
+	include	d775
+		+
+	lib	d775
+		skip=\.(pyo|pyc)$
+		+
+	log	d777 sys sys
+		cron	a664 bootes bootes
+	man	d775
+		+
+	src	d775
+		skip=\.[ao]?[12578vqki]?$
+		+
+		
+tmp	d555
+usr	d775
+	bootes	d775 bootes bootes
+		uid=bootes
+		gid=bootes
+		bin d775
+			386 d775
+				+
+			rc d775
+				+
+		lib d775
+			*
+		tmp d775
+	glenda	d775 glenda glenda
+		uid=glenda
+		gid=glenda
+		bin d775
+			386 d775
+				+
+			rc d775
+				+
+		lib d775
+			*
+		tmp d775
+
+dist	d775
+	plan9front d775
+		uid=glenda
+		.hgignore 664
+		.hg d775
+			+
+
+LICENSE	444
+LICENSE.afpl	444
+LICENSE.gpl	444
+NOTICE	444
