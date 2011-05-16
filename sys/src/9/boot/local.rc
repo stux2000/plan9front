@@ -1,0 +1,69 @@
+#!/bin/rc
+
+fn showlocaldevs{
+	echo local devices found:
+	for(d in /dev/sd*){
+		if(test -r $d/ctl){
+			q=`{sed 's,(inquiry|geometry),\
+\1,g' $d/ctl | grep inquiry}
+			echo $d':' $q(2-)
+			for(i in `{ls -p $d}){
+				p=$d/$i
+				switch($i){
+				case ctl raw log
+					;
+				case 9fat plan9 nvram
+					echo $p
+				case *
+					t=`{fstype $p}
+					if(~ $#bootargs 0 && ! ~ $t '')
+						bootargs=local!$p
+					echo $p $t
+				}
+			}
+		}
+	}
+}
+
+fn configlocal{
+	diskparts
+}
+
+fn bootfs{
+	{$1 -s -f $*(2-) &} <[0=1] | echo 0 >/srv/boot
+}
+
+fn connectlocal{
+	if(test -r $1)
+		t=`{fstype $1}
+	if not {
+		t=$1; shift
+	}
+	switch($t){
+	case ''
+		fatal unknown fstype $1
+	case 9660
+		bootfs 9660srv $*
+	case kfs
+		bootfs disk/kfs $*
+	case dos
+		if(! test -f /srv/dos)
+			dossrv
+		m=/mnt/dosboot
+		must mount /srv/dos $m $1
+		shift
+		if(~ $#* 0)
+			f=$m/9front.iso
+		if not
+			f=$m/$1
+		if(test -r $f)
+			connectlocal $f
+		if not
+			connectlocal $*
+	case *
+		bootfs $t $*
+	}
+}
+
+mlocal=(configlocal connectlocal)
+mt=(mlocal $mt)
