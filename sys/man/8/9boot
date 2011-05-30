@@ -1,0 +1,84 @@
+.TH 9BOOT 8
+.SH NAME
+9bootfat, 9bootiso, 9bootpxe \- bootloaders for pc FAT, ISO and PXE network booting
+.SH SYNOPSIS
+started by BIOS or chainloaded by partition bootsector
+.SH DESCRIPTION
+The bootloader is responsible for reading the
+.IR plan9.ini (8)
+boot parameters and booting a kernel. It interprets the
+.B bootfile=
+parameter as a file path on the current boot media
+to locate the kernel image. The path should be in all
+lower case except for
+.IR 9bootpxe
+wich supports case sensitive file names. Read parameters
+are echoed on the console. The boot procedure
+can be interrupted by pressing any key after the configuration
+was read. The interactive boot console is indicated with a
+.B >
+prompt. The syntax of the boot console is the same as in
+the
+.IR plan9.ini (8)
+file. The word
+.B clear
+will reset all current parameters. The word
+.B boot
+will end the console and resume booting the kernel. The boot
+console is entered automatically when: boot failed, no
+.B bootfile=
+parameter was specified or no 
+.IR plan9.ini (8)
+was found.
+.SH FAT BOOTING
+The
+.IR 9bootfat
+program is responsible for loading the kernel from
+the
+.IR 9fat
+partition into memory and passing it the
+.IR plan9.ini (8)
+boot parameters. It is chainloaded by
+.IR pbs,
+wich locates it in the root of the active
+FAT partition. The
+.IR plan9.ini (8)
+file is read from the root directory of the FAT
+filesystem.
+.SH CD-ROM BOOTING
+Booting from CD-ROM requires
+.IR 9bootiso
+to be included in the ISO-9660 image under
+.B 386/9bootiso,
+set as a non emulation bootblock (see
+.IR mk9660 (8)).
+The BIOS loads the first 2K of 
+.B 386/9bootiso
+into memory and then executes the program. The remainder
+of the file is then read to complete the chainloading process.
+Boot parameters are read from
+.B cfg/plan9.ini.
+.SH NETWORK BOOTING
+With a PXE capable BIOS and network card it is possible for
+a machine to download
+.IR 9bootpxe
+and a kernel from a tftp server. The location of
+.IR 9bootpxe
+is defined by the
+.B bootf=/386/9bootpxe
+line in the tftp server's
+.IR ndb (6)
+entry.
+.BR
+Once started,
+.IR 9bootpxe
+will read the file
+.B /cfg/pxe/$ether
+from the tftp server, where
+.B $ether
+is the MAC address of the client's network card
+in lower case hex, and use this as its
+.IR plan9.ini (8)
+file.
+.SH SOURCE
+.BR /sys/src/boot/pc .
