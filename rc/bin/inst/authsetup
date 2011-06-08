@@ -1,0 +1,30 @@
+#!/bin/rc
+
+# desc: invalidate nvram
+# prereq: systype copydist
+
+nvram=(/dev/sd*/nvram)
+nvram=$nvram(1)
+
+switch($1){
+case go
+	echo 'trust, but verify' >$nvram
+
+	echo
+	echo 'You will be asked to enter an authid, authdom, secstore key,'
+	echo 'and password upon next boot. The authid is the hostowner.'
+	echo 'The authdom is the domain from your network configuration.'
+	echo 'The secstore key and password should be a secret password'
+	echo 'of eight characters or greater in length. On an auth server,'
+	echo 'the password will be used to encrypt the user database'
+	echo '/adm/keys'
+	echo
+
+	authsetup=done
+	export authsetup
+case checkdone
+	if(~ $syst cpu && test -w $nvram && ! grep -s trust $nvram){
+		authsetup=ready
+		export authsetup
+	}
+}
