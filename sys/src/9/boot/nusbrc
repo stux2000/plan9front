@@ -1,0 +1,25 @@
+#!/bin/rc
+
+if(! bind -a '#u' /dev)
+	exit
+mkdir '#σc/usb'
+if(! nusb/usbd)
+	exit
+
+@{
+	rfork ne
+	fn attach {
+		switch($4){
+		case *03
+			nusb/kb $1
+		case *08
+			nusb/disk $1
+		}
+	}
+	fn detach {
+		rm -f '#σc/usb/'^$1.*
+	}
+	rc < '#σ/usb/usbevent' &
+}
+
+bind -a '#σ/usb' /dev
