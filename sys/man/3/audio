@@ -1,0 +1,60 @@
+.TH AUDIO 3 
+.SH NAME
+audio \- audio device
+.SH SYNOPSIS
+.nf
+.B bind -a #A /dev
+.sp 0.3v
+.B /dev/audio
+.B /dev/volume
+.fi
+.SH DESCRIPTION
+The audio device serves a one-level directory,
+giving access to the stereo audio ports.
+.B Audio
+is the data file, which can be written for audio playback.
+Audio data is a sequence of stereo samples, left sample first.
+Each sample is a 16 bit little-endian two's complement integer;
+the default sampling rate is 44.1 kHz.
+.PP
+The length of the
+.B audio
+file as returned by
+.IR stat (2)
+represents the number of bytes buffered for input or output.
+.PP
+.B Volume
+is the control file associated with the audio port.
+Each input and output source has an associated stereo volume control,
+ranging from 0 (quiet) to 100 (loud).
+In addition, there are controls for the sampling rate of the D/A and A/D converters
+latency control and for any tone controls.
+Reads
+return lines of the form
+.IP
+.I source
+.B in left
+.I value 
+.B right
+.I value
+.B out left
+.I value
+.B right
+.I value
+.PP
+possibly abbreviated if the values are shared or non-existent.
+For example, if all of the values are shared, the form degenerates to
+.RI ` source
+.IR value '.
+Valid sources depend on the particular audio device,
+though all devices have an
+.B audio
+stereo source, which controls the output volume from the D/A converter
+connected to
+.BR audio .
+.PP
+Writes accept the same format with same abbreviations.
+.SH SOURCE
+.B /sys/src/9/port/devaudio.c
+.SH SEE ALSO
+.IR nusb (4)
