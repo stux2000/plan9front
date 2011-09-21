@@ -1,0 +1,117 @@
+cloud
+metadata
+replication
+factory
+interface
+singleton
+framework
+NoSQL |
+cache
+persistence |
+self-signing |
+scripting |
+template
+API
+depenency
+service
+event
+polling
+injection
+pipelining
+firewall
+standard
+GPU
+shader
+leveraged ^
+extended ^
+basic ^
+core
+hardware
+software
+database
+rich-client
+DOM
+CSS
+CMS
+/map/reduce
+reduce/map
+descriptor
+hypervisor
+callback
+method
+table
+package
+plugin
+browser
+extension
+software ^
+open-source ^
+module
+proxy
+wrapper
+storage
+social ^
+private ^
+component
+markup
+lifecycle
+flexible ^
+patented ^
+abstract ^
+stateless ^
+optimized ^
+virtualized ^
+session |
+high-performance |
+general-purpose |
+generic ^
+property |
+secure ^
+overflow-preventing ^
+self-healing ^
+ISO-certified ^
+encrypted ^
+proven ^
+open ^
+RESTful ^
+content-addressed ^
+asynchronous ^
+object-oriented ^
+immutable ^
+anonymous ^
+transactional ^
+distributed ^
+structured ^
+managed ^
+webscale ^
+lossless ^
+virtual ^
+shared ^
+stable ^
+SQL *
+JSON *
+XML *
+YAML *
+XMPP *
+SOAP *
+HTML *
+AJAX *
+ORM *
+SVG *
+ACPI *
+WEB2.0 *
+SSL *
+HTTP *
+TOR *
+manager $
+backend $
+control $
+controller $
+framework $
+generator $
+optimizer $
+solution $
+locator $
+-oriented %
+-based %
+-aware %
