@@ -1,0 +1,6 @@
+#!/bin/rc
+rfork n
+cd /
+if(! test -d .hg)
+	bind -ac /dist/plan9front /
+hg incoming && hg -v pull -u
