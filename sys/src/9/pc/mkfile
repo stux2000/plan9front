@@ -105,6 +105,7 @@ install:V:	$p$CONF
 $ETHER: 			etherif.h ../port/netif.h
 $AUDIO:				../port/audioif.h
 ether8003.$O ether8390.$O:	ether8390.h
+etheryuk.$O:			yukdump.h
 $VGA mouse.$O:			screen.h /sys/include/memdraw.h
 devfloppy.$O: 			floppy.h
 archmp.$O mp.$O:		apbootstrap.h
@@ -121,6 +122,7 @@ trap.$O:			/sys/include/tos.h
 uartaxp.$O:			uartaxp.i
 etherm10g.$O:			etherm10g2k.i etherm10g4k.i
 etheriwl.$O:			wifi.h
+etherrt2860.$O: 		wifi.h
 wifi.$O:			wifi.h
 
 init.h:D:		../port/initcode.c init9.c
