@@ -2,12 +2,12 @@
 #include <libc.h>
 #include <thread.h>
 #include <draw.h>
+#include <mouse.h>
 #include "dat.h"
 #include "fns.h"
 
-int ppuy, ppux;
+int ppuy, ppux, odd;
 uchar pic[256*240*4*9];
-extern uchar oam[256];
 
 static void
 pixel(int x, int y, int val, int back)
@@ -248,8 +248,21 @@ static void
 flush(void)
 {
 	extern Rectangle picr;
-	extern Image *tmp;
+	extern Image *tmp, *bg;
+	extern Mousectl *mc;
+	Mouse m;
+	Point p;
 
+	while(nbrecv(mc->c, &m) > 0)
+		;
+	if(nbrecvul(mc->resizec) > 0){
+		if(getwindow(display, Refnone) < 0)
+			sysfatal("resize failed: %r");
+		p = divpt(addpt(screen->r.min, screen->r.max), 2);
+		picr = (Rectangle){subpt(p, Pt(scale * 128, scale * 120)), addpt(p, Pt(scale * 128, scale * 120))};
+		bg = allocimage(display, Rect(0, 0, 1, 1), screen->chan, 1, 0xCCCCCCFF);
+		draw(screen, screen->r, bg, nil, ZP);
+	}
 	if(tmp){
 		loadimage(tmp, tmp->r, pic, 256*240*4*scale*scale);
 		draw(screen, picr, tmp, nil, ZP);
@@ -289,7 +302,11 @@ ppustep(void)
 	if(ppux > 340){
 		ppux = 0;
 		ppuy++;
-		if(ppuy > 261)
+		if(ppuy > 261){
 			ppuy = 0;
+			if(odd && (mem[PPUCTRL] & (BGDISP | SPRITEDISP)) != 0)
+				ppux++;
+			odd ^= 1;
+		}
 	}
 }
