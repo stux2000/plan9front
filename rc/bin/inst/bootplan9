@@ -1,0 +1,45 @@
+#!/bin/rc
+
+p9offset=`{grep '^part 9fat ' /dev/$disk/ctl |awk '{print $3}'}
+if(! ~ $#p9offset 1) {
+	echo 'could not find plan 9 partition.'
+	echo 'cannot happen'
+	exit bad
+}
+
+echo
+echo 'If you use the Windows NT/2000/XP master boot record'
+echo 'or a master boot record from a Unix clone (e.g., LILO or'
+echo 'FreeBSD bootmgr), it is probably safe to continue using'
+echo 'that boot record rather than install the Plan 9 boot record.'
+echo
+prompt 'Install the Plan 9 master boot record' y n 
+switch($rd) {
+case n
+	;
+case y
+	disk/mbr -m /386/mbr /dev/$disk/data
+}
+
+prompt 'Mark the Plan 9 partition active' y n
+switch($rd) {
+case n
+	;
+case y
+	p9part=`{disk/fdisk /dev/$disk/data >[2]/dev/null </dev/null | 
+		grep PLAN9 | sed 1q | sed 's/ *(p.) .*/\1/'}
+	if(~ $#p9part 0){
+		echo 'You have no Plan 9 partitions (How could this happen?)' >[1=2]
+		exit 'no plan 9 partition found'
+	}
+	p9part=$p9part(1)
+	{ echo 'A '^$p9part; echo w } | disk/fdisk /dev/$disk/data >[2]/dev/null >/dev/null
+	x=$status
+	if(~ $x '' '|'){
+		echo
+		echo 'The Plan 9 partition is now marked as active.'
+		exit ''
+	}
+	exit $x
+}
+exit ''
