@@ -1,0 +1,26 @@
+BOOTDIR=../boot
+
+BOOTFILES=\
+	aux.$O\
+	boot.$O\
+	printstub.$O\
+
+$BOOTFILES:	$BOOTDIR/boot.h
+
+%.$O:	$BOOTDIR/%.c
+	$CC -I$BOOTDIR $CFLAGS $BOOTDIR/$stem.c
+
+boot:	$BOOTFILES
+	$LD -o $target $BOOTFILES
+
+BOOTFSPROTO=$BOOTDIR/bootfs.proto
+
+bootfs.paq:	$BOOTFSPROTO `{disk/mkfs -aos / $BOOTFSPROTO >[2]/dev/null}
+	mkdir -p bootfs
+	disk/mkfs -s / -d bootfs $BOOTFSPROTO
+	@{
+		cd bootfs/$objtype/bin
+		strip * */* */*/* >[2]/dev/null || status=''
+	}
+	mkpaqfs -o $target bootfs
+	rm -rf bootfs
