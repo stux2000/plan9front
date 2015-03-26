@@ -1,0 +1,1 @@
+![http://i.intma.in/http://gifninja.com/animatedgifs/32988/john-cleese-monty-python-silly-job-interview.gif](http://i.intma.in/http://gifninja.com/animatedgifs/32988/john-cleese-monty-python-silly-job-interview.gif)
